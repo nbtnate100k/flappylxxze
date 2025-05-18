@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Lxxze - Hardcore Mode</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --background-color: #1a1a1a;
+            --game-background: #5DB1E0;
+            --text-color: #ffffff;
+            --bird-color: #FFD700;
+            --pipe-color: #00AA00;
+            --pipe-lip-color: #008800;
+            --coin-color: #FFD700;
+            --menu-background: rgba(0, 0, 0, 0.95);
+            --ground-color: #8B4513;
+            --hill-color: #228B22;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            touch-action: manipulation;
+            user-select: none;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--game-background);
+        }
+        
+        #pause-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 45px;
+            height: 45px;
+            background-color: #ff0000;
+            border-radius: 8px;
+            transform: rotate(45deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            cursor: pointer;
+            border: 3px solid white;
+            opacity: 1;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        #pause-button:hover {
+            opacity: 1;
+        }
+        
+        #pause-button .bar {
+            width: 6px;
+            height: 18px;
+            background-color: white;
+            margin: 0 3px;
+            transform: rotate(-45deg);
+            border-radius: 2px;
+        }
+        
+        #pause-button.paused .bar {
+            display: none;
+        }
+        
+        #pause-button.paused:before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-left: 18px solid white;
+            border-bottom: 10px solid transparent;
+            display: block;
+            transform: rotate(-45deg);
+        }
+        
+        #pause-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--menu-background);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            border: 2px solid var(--primary-color);
+            min-width: 200px;
+        }
+        
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            z-index: 150;
+            display: none;
+            font-weight: bold;
+        }
+        
+        #pause-menu h2 {
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+        
+        #pause-menu button {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        #pause-menu button:hover {
+            background-color: #3d8c40;
+        }
+        
+        /* Smoke effect overlay */
+        #smoke-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.15); /* Red tint instead of black smoke */
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .hud {
+            position: absolute;
+            padding: 12px;
+            color: var(--text-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 1;
+            font-weight: bold;
+        }
+        
+        #score-display {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+        
+        #coin-display {
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        #start-message {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            text-align: center;
+            display: none;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+        }
+
+        .game-button {
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .game-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #store-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+
+        #music-toggle {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 2;
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #store-menu {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--menu-background);
+            padding: 25px;
+            border-radius: 15px;
+            color: var(--text-color);
+            z-index: 3;
+            width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .store-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .store-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .buy-button {
+            padding: 8px 15px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .buy-button:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .buy-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Start Screen Styles */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .start-content {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            color: white;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+        
+        .start-content h1 {
+            font-size: 36px;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+        }
+        
+        .start-content h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff4444;
+        }
+        
+        .game-description {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .difficulty-info {
+            text-align: left;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 400px;
+        }
+        
+        .difficulty-info h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .difficulty-info ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .difficulty-info li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .difficulty-info li:before {
+            content: '•';
+            position: absolute;
+            left: 5px;
+        }
+        
+        .normal { color: #ffffff; }
+        .fast { color: #ffff00; }
+        .faster { color: #ffa500; }
+        .hard { color: #ff4500; }
+        .god { 
+            color: #ff0000; 
+            text-shadow: 0 0 5px #ff0000;
+            font-weight: bold;
+        }
+        
+        .controls-info {
+            margin: 20px 0;
+        }
+        
+        #play-button {
+            font-size: 24px;
+            padding: 12px 30px;
+            margin-top: 20px;
+            background: var(--primary-color);
+            transition: all 0.3s ease;
+            animation: pulse 1.5s infinite;
+        }
+        
+        #play-button:hover {
+            transform: scale(1.05);
+            background: #45a049;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        #close-store {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        #close-store:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .bullet {
+            position: absolute;
+            width: 8px;
+            height: 3px;
+            background: #fff;
+            border-radius: 2px;
+            box-shadow: 0 0 5px rgba(255,255,0,0.8);
+        }
+
+        .power-up-indicator {
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .power-up-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            font-size: 20px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .active-power-up {
+            animation: pulse 1s infinite;
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        /* Mobile optimization */
+        /* Mobile optimization - this is a mobile-only game */
+        @media (max-width: 480px) {
+            #game-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .store-item {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        
+        /* Desktop warning - this is a mobile-only game */
+        #desktop-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 18px;
+        }
+        
+        #desktop-warning h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ff4444;
+        }
+        
+        #desktop-warning p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        @media (min-width: 769px) {
+            #desktop-warning {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" preload="auto" loop>
+        <source src="file:///C:/Users/sharv/Downloads/lxxze - flyin mix2.mp3" type="audio/mpeg">
+    </audio>
+    <!-- Desktop warning message -->
+    <div id="desktop-warning">
+        <h2>Mobile-Only Game</h2>
+        <p>Flappy Lxxze is designed for mobile devices only.</p>
+        <p>Please open this game on your smartphone or tablet for the best experience.</p>
+        <p>If you're on a mobile device and seeing this message, please refresh the page.</p>
+    </div>
+    
+    <div id="game-container">
+        <div id="smoke-overlay"></div>
+        <canvas id="game-canvas"></canvas>
+        <button id="music-toggle" title="Toggle Music">🔊</button>
+        <div id="pause-button">
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <div id="pause-menu">
+            <h2>Game Paused</h2>
+            <button id="resume-button">Resume</button>
+            <button id="restart-button">Restart</button>
+        </div>
+        <div id="countdown"></div>
+        <div id="score-display" class="hud">0</div>
+        <div id="coin-display" class="hud">💰 0</div>
+        <div id="start-message" class="hud">
+            Tap to Start<br>
+            ↑ Tap to fly ↑<br>
+            Space to shoot<br>
+            <span style="color: #ff4444">⚠️ Hardcore Mode: Lose everything on death! ⚠️</span>
+        </div>
+        <div class="power-up-indicator">
+            <div class="power-up-icon" id="gun-icon">🔫</div>
+            <div class="power-up-icon" id="shield-icon">🛡️</div>
+            <div class="power-up-icon" id="coin-icon">💰</div>
+        </div>
+        <button id="store-button" class="game-button">Store</button>
+        
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <div class="start-content">
+                <h1>Flappy Lxxze</h1>
+                <h2>Hardcore Mode</h2>
+                <div class="game-description">
+                    <p>Navigate through pipes, collect coins, and unlock power-ups!</p>
+                    <p>But beware: in Hardcore Mode, you lose everything on death!</p>
+                </div>
+                <div class="difficulty-info">
+                    <h3>Difficulty Progression:</h3>
+                    <ul>
+                        <li><span class="normal">Normal</span>: Score 0-19</li>
+                        <li><span class="fast">Fast</span>: Score 20-49</li>
+                        <li><span class="faster">Faster</span>: Score 50-99</li>
+                        <li><span class="hard">Hard</span>: Score 100-999</li>
+                        <li><span class="god">GOD MODE</span>: Score 1000+</li>
+                    </ul>
+                </div>
+                <div class="controls-info">
+                    <p>👆 Tap to fly</p>
+                    <p>👆👆 Double tap to shoot (with gun power-up)</p>
+                </div>
+                <button id="play-button" class="game-button">PLAY GAME</button>
+            </div>
+        </div>
+        
+        <div id="store-menu">
+            <button id="close-store">×</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">Power-Up Store</h2>
+            <div class="store-item">
+                <div>
+                    <h3>Basic Gun</h3>
+                    <p>Shoot through pipes</p>
+                    <p style="color: #4CAF50">50 coins</p>
+                </div>
+                <button class="buy-button" data-item="gun">Buy</button>
+            </div>
+            <div class="store-item">
+                <div>
+                    <h3>Double Coins</h3>
+                    <p>Double all coin pickups</p>
+                    <p style="color: #4CAF50">100 coins</p>
+                </div>
+                <button class="buy-button" data-item="doubleCoins">Buy</button>
+            </div>
+            <div class="store-item">
+                <div>
+                    <h3>Shield</h3>
+                    <p>Survive one hit</p>
+                    <p style="color: #4CAF50">150 coins</p>
+                </div>
+                <button class="buy-button" data-item="shield">Buy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Configuration
+        const CONFIG = {
+            GRAVITY: 0.5,
+            JUMP_FORCE: -8,
+            BASE_PIPE_SPEED: 3, // Increased base speed
+            PIPE_SPEED: 3,      // Current speed (will change with difficulty)
+            PIPE_GAP: 130,
+            PIPE_WIDTH: 52,
+            COIN_VALUE: 15,
+            BIRD_WIDTH: 80,
+            BIRD_HEIGHT: 80,
+            BULLET_SPEED: 7,
+            POWERUP_PRICES: {
+                gun: 50,
+                doubleCoins: 100,
+                shield: 150
+            },
+            // Difficulty levels
+            DIFFICULTY_LEVELS: [
+                { score: 0, speed: 3, name: 'Normal' },
+                { score: 20, speed: 4, name: 'Fast' },
+                { score: 50, speed: 5, name: 'Faster' },
+                { score: 100, speed: 6, name: 'Hard' },
+                { score: 1000, speed: 8, name: 'GOD MODE' }
+            ]
+        };
+
+        // Load images
+        const birdImage = new Image();
+        birdImage.src = 'https://i.postimg.cc/13brkfmB/c1d90bab-9d18-4e2d-a8b4-eba0ca024b3c-removebg-preview.png';
+
+        const coinImage = new Image();
+        coinImage.src = 'https://i.postimg.cc/85n1PQ71/R-removebg-preview.png';
+
+        // Game State
+        const gameState = {
+            started: false,
+            active: false,  // Whether the game is active (after start screen)
+            over: false,
+            score: 0,
+            coins: 0,
+            bestScore: 0,
+            paused: false,  // New pause state
+            upgrades: {
+                gun: false,
+                doubleCoins: false,
+                shield: false
+            }
+        };
+
+        // Initialize canvas and context
+        const container = document.getElementById('game-container');
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        function resizeGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            CONFIG.PIPE_GAP = Math.min(80, canvas.height * 0.12); // Drastically reduced pipe gap for extreme challenge
+            CONFIG.BIRD_WIDTH = Math.min(34 * 2, canvas.width * 0.2);
+            CONFIG.BIRD_HEIGHT = Math.min(24 * 2, canvas.height * 0.1);
+            CONFIG.PIPE_WIDTH = Math.min(52, canvas.width * 0.15);
+        }
+        resizeGame();
+        window.addEventListener('resize', resizeGame);
+
+        // DOM Elements
+        const elements = {
+            scoreDisplay: document.getElementById('score-display'),
+            coinDisplay: document.getElementById('coin-display'),
+            startMessage: document.getElementById('start-message'),
+            storeButton: document.getElementById('store-button'),
+            storeMenu: document.getElementById('store-menu'),
+            closeStore: document.getElementById('close-store'),
+            startScreen: document.getElementById('start-screen'),
+            playButton: document.getElementById('play-button'),
+            smokeOverlay: document.getElementById('smoke-overlay'),
+            pauseButton: document.getElementById('pause-button'),
+            pauseMenu: document.getElementById('pause-menu'),
+            resumeButton: document.getElementById('resume-button'),
+            restartButton: document.getElementById('restart-button'),
+            countdown: document.getElementById('countdown'),
+            powerUpIcons: {
+                gun: document.getElementById('gun-icon'),
+                shield: document.getElementById('shield-icon'),
+                coin: document.getElementById('coin-icon')
+            }
+        };
+
+        // Game Objects
+        const bird = {
+            x: canvas.width * 0.2,
+            y: canvas.height * 0.4,
+            width: CONFIG.BIRD_WIDTH,
+            height: CONFIG.BIRD_HEIGHT,
+            velocity: 0,
+            hasShield: false
+        };
+
+        let pipes = [];
+        let gameCoins = [];
+        let bullets = [];
+
+        // Game Functions
+        function createPipe() {
+            // Get the ground height to ensure pipes don't extend into the ground
+            const groundHeight = backgroundElements.initialized ? 
+                backgroundElements.ground.height : (canvas.height * 0.15);
+            
+            // Make pipe gaps more consistent and fair with better positioning
+            const minHeight = 80; // Minimum pipe height
+            
+            // Set a very tight pipe gap
+            const safeGap = Math.max(CONFIG.PIPE_GAP, CONFIG.BIRD_HEIGHT * 1.1); // Bare minimum gap that's still technically passable
+            
+            // Calculate maximum height considering the safe gap and ground
+            const maxHeight = canvas.height - groundHeight - safeGap - minHeight;
+            
+            // Limit the maximum height of pipes to prevent impossible configurations
+            const maxPipeHeight = (canvas.height - groundHeight) * 0.5; // No pipe can be more than 50% of available height
+            
+            // Use a more balanced approach to determine pipe height
+            let height;
+            
+            // Every third pipe is more centered for easier passage
+            if (pipes.length % 3 === 0) {
+                // Center-biased pipe (easier to navigate)
+                const centerPoint = (canvas.height - groundHeight) / 2;
+                height = centerPoint - safeGap/2 - minHeight/2 + (Math.random() * minHeight);
+            } else {
+                // Regular pipe with controlled randomness
+                // Divide screen into three sections and place gap in one of them
+                const section = Math.floor(Math.random() * 3); // 0, 1, or 2
+                const sectionHeight = (canvas.height - groundHeight - safeGap) / 3;
+                
+                // Place gap in the selected section
+                height = section * sectionHeight + Math.random() * (sectionHeight - safeGap/2);
+                
+                // Ensure we don't create impossible pipes
+                height = Math.max(minHeight, Math.min(maxHeight - minHeight, height));
+            }
+            
+            // Final safety check to ensure gap is passable
+            if (height > maxPipeHeight) {
+                height = maxPipeHeight;
+            }
+            
+            // Calculate bottom pipe height, ensuring it doesn't extend into the ground
+            const bottomHeight = Math.min(
+                Math.floor(canvas.height - height - safeGap - groundHeight),
+                maxPipeHeight
+            );
+            
+            // Add a final validation to ensure there's always a gap
+            if (height + bottomHeight + safeGap > canvas.height - groundHeight) {
+                // If we somehow still have an issue, force a reasonable configuration
+                const availableHeight = canvas.height - groundHeight - safeGap;
+                height = Math.floor(availableHeight * 0.4); // 40% for top pipe
+                // Bottom pipe will be calculated below
+            }
+            
+            return {
+                x: canvas.width,
+                topHeight: Math.floor(height),
+                bottomHeight: bottomHeight,
+                scored: false,
+                health: 2
+            };
+        }
+
+        function createCoin(pipe) {
+            return {
+                x: pipe.x + CONFIG.PIPE_WIDTH / 2,
+                y: pipe.topHeight + (CONFIG.PIPE_GAP / 2) - 10,
+                width: 20,
+                height: 20,
+                collected: false
+            };
+        }
+
+        function shoot() {
+            if (gameState.upgrades.gun) {
+                bullets.push({
+                    x: bird.x + bird.width,
+                    y: bird.y + bird.height/2,
+                    speed: CONFIG.BULLET_SPEED
+                });
+            }
+        }
+
+        function updatePowerUpIndicators() {
+            Object.entries(gameState.upgrades).forEach(([upgrade, active]) => {
+                const icon = elements.powerUpIcons[upgrade === 'doubleCoins' ? 'coin' : upgrade];
+                if (icon) {
+                    icon.classList.toggle('active-power-up', active);
+                }
+            });
+        }
+
+        // Background elements
+        const backgroundElements = {
+            clouds: [],
+            hills: [],
+            ground: {y: 0, height: 0},
+            initialized: false
+        };
+        
+        function initBackgroundElements() {
+            // Initialize clouds
+            const cloudCount = Math.ceil(canvas.width / 300);
+            for (let i = 0; i < cloudCount * 2; i++) {
+                backgroundElements.clouds.push({
+                    x: Math.random() * canvas.width * 1.5,
+                    y: Math.random() * (canvas.height * 0.5),
+                    width: 60 + Math.random() * 40,
+                    height: 30 + Math.random() * 20,
+                    speed: 0.2 + Math.random() * 0.3
+                });
+            }
+            
+            // Initialize hills
+            const hillCount = Math.ceil(canvas.width / 200);
+            for (let i = 0; i < hillCount * 2; i++) {
+                backgroundElements.hills.push({
+                    x: (i - 1) * (canvas.width / hillCount),
+                    height: 50 + Math.random() * 70,
+                    width: 150 + Math.random() * 100
+                });
+            }
+            
+            // Initialize ground
+            backgroundElements.ground.height = canvas.height * 0.15;
+            backgroundElements.ground.y = canvas.height - backgroundElements.ground.height;
+            
+            backgroundElements.initialized = true;
+        }
+        
+        function drawBackground() {
+            // Sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGradient.addColorStop(0, '#5DB1E0');  // Lighter blue at top
+            skyGradient.addColorStop(1, '#89CFF0');  // Darker blue at bottom
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw clouds
+            ctx.fillStyle = '#FFF';
+            backgroundElements.clouds.forEach(cloud => {
+                // Draw cloud as a group of circles
+                drawCloud(cloud.x, cloud.y, cloud.width, cloud.height);
+                
+                // Move clouds slowly
+                if (gameState.started && !gameState.over) {
+                    cloud.x -= cloud.speed;
+                    if (cloud.x < -cloud.width) {
+                        cloud.x = canvas.width + cloud.width;
+                        cloud.y = Math.random() * (canvas.height * 0.5);
+                    }
+                }
+            });
+            
+            // Draw distant hills
+            const hillGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            hillGradient.addColorStop(0, '#228B22');  // Forest green
+            hillGradient.addColorStop(1, '#006400');  // Dark green
+            ctx.fillStyle = hillGradient;
+            
+            backgroundElements.hills.forEach(hill => {
+                drawHill(hill.x, canvas.height - backgroundElements.ground.height, hill.width, hill.height);
+                
+                // Move hills very slowly
+                if (gameState.started && !gameState.over) {
+                    hill.x -= 0.5;
+                    if (hill.x < -hill.width) {
+                        hill.x = canvas.width;
+                    }
+                }
+            });
+            
+            // Draw ground
+            const groundY = backgroundElements.ground.y;
+            const groundHeight = backgroundElements.ground.height;
+            
+            // Ground gradient
+            const groundGradient = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+            groundGradient.addColorStop(0, '#8B4513');  // Brown top
+            groundGradient.addColorStop(0.2, '#A0522D');  // Lighter brown
+            groundGradient.addColorStop(1, '#654321');  // Darker brown bottom
+            
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, groundY, canvas.width, groundHeight);
+            
+            // Ground detail - grass line
+            ctx.fillStyle = '#0A5F04';
+            ctx.fillRect(0, groundY, canvas.width, 5);
+            
+            // Ground pattern - small squares for texture
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
+            const brickSize = 20;
+            for (let x = 0; x < canvas.width; x += brickSize) {
+                for (let y = groundY + 5; y < canvas.height; y += brickSize) {
+                    if ((x + y) % (brickSize * 2) === 0) {
+                        ctx.fillRect(x, y, brickSize, brickSize);
+                    }
+                }
+            }
+        }
+        
+        function drawCloud(x, y, width, height) {
+            const radiusX = width / 2;
+            const radiusY = height / 2;
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add some smaller circles to make the cloud fluffy
+            ctx.beginPath();
+            ctx.ellipse(x + radiusX * 0.5, y - radiusY * 0.2, radiusX * 0.7, radiusY * 0.7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.ellipse(x - radiusX * 0.5, y + radiusY * 0.1, radiusX * 0.6, radiusY * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        function drawHill(x, groundY, width, height) {
+            ctx.beginPath();
+            ctx.moveTo(x - width/2, groundY);
+            ctx.quadraticCurveTo(x, groundY - height, x + width/2, groundY);
+            ctx.fill();
+        }
+        
+        function drawGame() {
+            // Initialize background elements if needed
+            if (!backgroundElements.initialized) {
+                initBackgroundElements();
+            }
+            
+            // Draw background
+            drawBackground();
+            
+            // Draw game objects
+            drawPipes();
+            drawCoins();
+            drawBird();
+            drawBullets();
+            
+            // Update game state
+            if (gameState.started && !gameState.over) {
+                updateGame();
+            }
+            
+            requestAnimationFrame(drawGame);
+        }
+
+        function drawBird() {
+            if (birdImage.complete) {
+                ctx.save();
+                const centerX = bird.x + bird.width/2;
+                const centerY = bird.y + bird.height/2;
+                
+                ctx.translate(centerX, centerY);
+                const rotation = Math.min(Math.max(bird.velocity * 0.05, -0.5), 0.5);
+                ctx.rotate(rotation);
+                
+                ctx.drawImage(
+                    birdImage,
+                    -bird.width/2,
+                    -bird.height/2,
+                    bird.width,
+                    bird.height
+                );
+                
+                ctx.restore();
+            }
+
+            if (bird.hasShield) {
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(
+                    bird.x + bird.width/2,
+                    bird.y + bird.height/2,
+                    bird.width/1.5,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+            }
+        }
+
+        function drawCoins() {
+            gameCoins.forEach(coin => {
+                if (!coin.collected && coinImage.complete) {
+                    ctx.save();
+                    // Add rotation animation
+                    const rotation = (Date.now() / 1000) % (Math.PI * 2);
+                    const centerX = coin.x + coin.width/2;
+                    const centerY = coin.y + coin.height/2;
+                    
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(rotation);
+                    
+                    ctx.drawImage(
+                        coinImage,
+                        -coin.width/2,
+                        -coin.height/2,
+                        coin.width,
+                        coin.height
+                    );
+                    
+                    ctx.restore();
+                }
+            });
+        }
+
+        function drawPipes() {
+            // Get ground height for proper pipe positioning
+            const groundY = backgroundElements.initialized ? 
+                backgroundElements.ground.y : (canvas.height - canvas.height * 0.15);
+                
+            pipes.forEach(pipe => {
+                // Main pipe body - Mario green color
+                ctx.fillStyle = '#00AA00';
+                
+                // Top pipe
+                ctx.fillRect(pipe.x, 0, CONFIG.PIPE_WIDTH, pipe.topHeight);
+                
+                // Bottom pipe - ensure it doesn't extend into the ground
+                const bottomPipeY = Math.min(canvas.height - pipe.bottomHeight, groundY - 1);
+                const actualBottomHeight = Math.min(pipe.bottomHeight, groundY - bottomPipeY);
+                
+                if (actualBottomHeight > 0) {
+                    ctx.fillRect(
+                        pipe.x,
+                        bottomPipeY,
+                        CONFIG.PIPE_WIDTH,
+                        actualBottomHeight
+                    );
+                }
+                
+                // Pipe lip for top pipe (darker green)
+                ctx.fillStyle = '#008800';
+                const lipHeight = 15;
+                const lipWidth = 10;
+                
+                // Top pipe lip
+                if (pipe.topHeight > 0) {
+                    ctx.fillRect(pipe.x - lipWidth/2, pipe.topHeight - lipHeight, 
+                                CONFIG.PIPE_WIDTH + lipWidth, lipHeight);
+                }
+                
+                // Bottom pipe lip - only if pipe isn't extending into ground
+                if (actualBottomHeight > lipHeight) {
+                    ctx.fillRect(pipe.x - lipWidth/2, bottomPipeY, 
+                                CONFIG.PIPE_WIDTH + lipWidth, lipHeight);
+                }
+                
+                // Black outline
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                
+                // Top pipe outline
+                if (pipe.topHeight > 0) {
+                    // Main pipe
+                    ctx.strokeRect(pipe.x, 0, CONFIG.PIPE_WIDTH, pipe.topHeight);
+                    // Lip
+                    ctx.strokeRect(pipe.x - lipWidth/2, pipe.topHeight - lipHeight, 
+                                CONFIG.PIPE_WIDTH + lipWidth, lipHeight);
+                }
+                
+                // Bottom pipe outline - only if pipe isn't extending into ground
+                if (actualBottomHeight > 0) {
+                    // Main pipe
+                    ctx.strokeRect(pipe.x, bottomPipeY, 
+                                CONFIG.PIPE_WIDTH, actualBottomHeight);
+                    // Lip - only if pipe is tall enough
+                    if (actualBottomHeight > lipHeight) {
+                        ctx.strokeRect(pipe.x - lipWidth/2, bottomPipeY, 
+                                    CONFIG.PIPE_WIDTH + lipWidth, lipHeight);
+                    }
+                }
+                
+                // Highlight (lighter green line on left side)
+                ctx.strokeStyle = '#00CC00';
+                ctx.lineWidth = 1;
+                
+                // Top pipe highlight
+                if (pipe.topHeight > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(pipe.x + 3, 0);
+                    ctx.lineTo(pipe.x + 3, pipe.topHeight - lipHeight);
+                    ctx.stroke();
+                }
+                
+                // Bottom pipe highlight
+                if (actualBottomHeight > lipHeight) {
+                    ctx.beginPath();
+                    ctx.moveTo(pipe.x + 3, bottomPipeY + lipHeight);
+                    ctx.lineTo(pipe.x + 3, bottomPipeY + actualBottomHeight);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = '#fff';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, 8, 3);
+            });
+        }
+
+        function updateGame() {
+            // Skip all updates if game is paused
+            if (gameState.paused) return;
+            
+            bird.velocity += CONFIG.GRAVITY;
+            bird.y += bird.velocity;
+
+            // Check if we need to update difficulty based on score
+            updateDifficulty();
+
+            updateBullets();
+            updatePipesAndCollisions();
+            updateCoins();
+            cleanup();
+
+            if (shouldSpawnNewPipe()) {
+                spawnNewPipe();
+            }
+        }
+        
+        function updateDifficulty() {
+            // Find the appropriate difficulty level based on current score
+            let newDifficulty = null;
+            for (let i = CONFIG.DIFFICULTY_LEVELS.length - 1; i >= 0; i--) {
+                if (gameState.score >= CONFIG.DIFFICULTY_LEVELS[i].score) {
+                    newDifficulty = CONFIG.DIFFICULTY_LEVELS[i];
+                    break;
+                }
+            }
+            
+            // If difficulty changed, update game parameters
+            if (newDifficulty && CONFIG.PIPE_SPEED !== newDifficulty.speed) {
+                CONFIG.PIPE_SPEED = newDifficulty.speed;
+                
+                // Show difficulty change message
+                showDifficultyMessage(newDifficulty.name);
+            }
+        }
+        
+        function showDifficultyMessage(difficultyName) {
+            // Create and show a temporary message
+            const message = document.createElement('div');
+            message.textContent = difficultyName + ' MODE!';
+            message.style.position = 'absolute';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.color = 'white';
+            message.style.fontSize = '36px';
+            message.style.fontWeight = 'bold';
+            message.style.textShadow = '2px 2px 4px rgba(0,0,0,0.7)';
+            message.style.zIndex = '10';
+            message.style.opacity = '1';
+            message.style.transition = 'opacity 2s';
+            
+            // Add special styling for GOD MODE
+            if (difficultyName === 'GOD MODE') {
+                message.style.color = '#FF5733';
+                message.style.fontSize = '48px';
+                message.style.textShadow = '0 0 10px #FF0000, 0 0 20px #FF0000';
+            }
+            
+            document.getElementById('game-container').appendChild(message);
+            
+            // Fade out and remove after 2 seconds
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.remove();
+                }, 2000);
+            }, 2000);
+        }
+
+        function updateBullets() {
+            // Skip all updates if game is paused
+            if (gameState.paused) return;
+            
+            bullets.forEach((bullet, bulletIndex) => {
+                bullet.x += bullet.speed;
+
+                pipes.forEach(pipe => {
+                    if (bullet.x >= pipe.x && bullet.x <= pipe.x + CONFIG.PIPE_WIDTH) {
+                        if (bullet.y <= pipe.topHeight || 
+                            bullet.y >= canvas.height - pipe.bottomHeight) {
+                            pipe.health--;
+                            bullets.splice(bulletIndex, 1);
+                            if (pipe.health <= 0) {
+                                pipe.topHeight = 0;
+                                pipe.bottomHeight = 0;
+                            }
+                        }
+                    }
+                });
+
+                if (bullet.x > canvas.width) {
+                    bullets.splice(bulletIndex, 1);
+                }
+            });
+        }
+
+        function updatePipesAndCollisions() {
+            // Skip all updates if game is paused
+            if (gameState.paused) return;
+            
+            pipes.forEach(pipe => {
+                pipe.x -= CONFIG.PIPE_SPEED;
+
+                if (!pipe.scored && bird.x > pipe.x + CONFIG.PIPE_WIDTH) {
+                    gameState.score++;
+                    elements.scoreDisplay.textContent = gameState.score;
+                    pipe.scored = true;
+                    
+                    // Update score display style based on difficulty
+                    updateScoreDisplayStyle();
+                    
+                    // Check if score is a multiple of 5 to trigger smoke effect
+                    if (gameState.score % 5 === 0) {
+                        triggerSmokeEffect();
+                    }
+                }
+
+                if (checkCollision(pipe)) {
+                    handleGameOver();
+                }
+            });
+        }
+
+        function updateCoins() {
+            // Skip all updates if game is paused
+            if (gameState.paused) return;
+            
+            gameCoins.forEach(coin => {
+                coin.x -= CONFIG.PIPE_SPEED;
+
+                if (!coin.collected && checkCoinCollision(coin)) {
+                    coin.collected = true;
+                    const value = gameState.upgrades.doubleCoins ? 
+                        CONFIG.COIN_VALUE * 2 : CONFIG.COIN_VALUE;
+                    gameState.coins += value;
+                    elements.coinDisplay.textContent = `💰 ${gameState.coins}`;
+                }
+            });
+        }
+
+        function cleanup() {
+            pipes = pipes.filter(pipe => pipe.x > -CONFIG.PIPE_WIDTH);
+            gameCoins = gameCoins.filter(coin => coin.x > -coin.width);
+        }
+
+        function shouldSpawnNewPipe() {
+            // Very close pipe spacing for extreme challenge
+            const minPipeSpacing = canvas.width / 5; // Very frequent pipes for hardcore difficulty
+            return pipes.length === 0 || 
+                   pipes[pipes.length - 1].x < canvas.width - minPipeSpacing;
+        }
+
+        function spawnNewPipe() {
+            const newPipe = createPipe();
+            pipes.push(newPipe);
+            gameCoins.push(createCoin(newPipe));
+        }
+
+        function checkCollision(pipe) {
+            // Skip collision detection if game is paused
+            if (gameState.paused) return false;
+            
+            // Add a smaller hitbox for the bird (70% of actual size)
+            const hitboxReduction = 0.15; // 15% smaller hitbox on each side
+            const birdHitboxX = bird.x + (bird.width * hitboxReduction);
+            const birdHitboxY = bird.y + (bird.height * hitboxReduction);
+            const birdHitboxWidth = bird.width * (1 - (hitboxReduction * 2));
+            const birdHitboxHeight = bird.height * (1 - (hitboxReduction * 2));
+            
+            const birdHitboxRight = birdHitboxX + birdHitboxWidth;
+            const birdHitboxBottom = birdHitboxY + birdHitboxHeight;
+            const pipeRight = pipe.x + CONFIG.PIPE_WIDTH;
+            
+            // For debugging - draw the hitbox (only visible during development)
+            // if (gameState.started && !gameState.over) {
+            //     ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            //     ctx.lineWidth = 1;
+            //     ctx.strokeRect(birdHitboxX, birdHitboxY, birdHitboxWidth, birdHitboxHeight);
+            // }
+            
+            if (birdHitboxRight > pipe.x && birdHitboxX < pipeRight) {
+                if (birdHitboxY < pipe.topHeight || 
+                    birdHitboxBottom > canvas.height - pipe.bottomHeight) {
+                    if (bird.hasShield) {
+                        bird.hasShield = false;
+                        updatePowerUpIndicators();
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            
+            // Check for ceiling and floor collisions with a small buffer
+            // Adjusted to account for the ground height
+            const groundY = backgroundElements.initialized ? 
+                backgroundElements.ground.y : (canvas.height - 5);
+            const floorCeilingBuffer = 5;
+            
+            return birdHitboxBottom > groundY || birdHitboxY < floorCeilingBuffer;
+        }
+
+        function checkCoinCollision(coin) {
+            // Skip collision detection if game is paused
+            if (gameState.paused) return false;
+            
+            return bird.x < coin.x + coin.width &&
+                   bird.x + bird.width > coin.x &&
+                   bird.y < coin.y + coin.height &&
+                   bird.y + bird.height > coin.y;
+        }
+
+        function handleGameOver() {
+            // Don't trigger game over if paused
+            if (gameState.paused) return;
+            
+            gameState.over = true;
+            gameState.bestScore = Math.max(gameState.score, gameState.bestScore);
+            
+            // Reset money and upgrades on death
+            gameState.coins = 0;
+            gameState.upgrades.gun = false;
+            gameState.upgrades.shield = false;
+            gameState.upgrades.doubleCoins = false;
+            bird.hasShield = false;
+            
+            // Update displays
+            elements.coinDisplay.textContent = `💰 0`;
+            updatePowerUpIndicators();
+            
+            // Reset store buttons
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.disabled = false;
+                button.textContent = 'Buy';
+            });
+            
+            elements.startMessage.innerHTML = 
+                `Game Over!<br>Score: ${gameState.score}<br>Best: ${gameState.bestScore}<br>
+                <span style="color: #ff4444">Lost all coins and power-ups!</span><br>
+                Tap to restart`;
+            elements.startMessage.style.display = 'block';
+        }
+
+        function resetGame() {
+            // Start music if it's enabled
+            if (gameState.musicOn && bgMusic.paused) {
+                bgMusic.play().catch(e => console.log('Audio play failed:', e));
+            }
+            gameState.over = false;
+            gameState.score = 0;
+            elements.scoreDisplay.textContent = '0';
+            elements.scoreDisplay.style.color = '#ffffff';
+            elements.scoreDisplay.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            
+            // Show HUD elements if they were hidden
+            elements.scoreDisplay.style.display = 'block';
+            elements.coinDisplay.style.display = 'block';
+            elements.storeButton.style.display = 'block';
+            document.querySelector('.power-up-indicator').style.display = 'flex';
+            
+            // Reset game speed to base level
+            CONFIG.PIPE_SPEED = CONFIG.BASE_PIPE_SPEED;
+            
+            bird.y = canvas.height * 0.4;
+            bird.velocity = 0;
+            bird.hasShield = false; // Make sure shield stays off
+            pipes = [];
+            gameCoins = [];
+            bullets = [];
+            elements.startMessage.style.display = 'none';
+            if (!gameState.started) {
+                gameState.started = true;
+            }
+            updatePowerUpIndicators();
+        }
+
+        // Event Handlers
+        function handleInteraction(event) {
+            event.preventDefault();
+            // Only handle interaction if the game is active (start screen is gone)
+            if (gameState.active) {
+                if (gameState.over) {
+                    resetGame();
+                } else {
+                    if (!gameState.started) {
+                        gameState.started = true;
+                        elements.startMessage.style.display = 'none';
+                    }
+                    bird.velocity = CONFIG.JUMP_FORCE;
+                }
+            }
+        }
+
+        function handleStorePurchase(event) {
+            const button = event.target;
+            if (!button.classList.contains('buy-button')) return;
+
+            const item = button.dataset.item;
+            const price = CONFIG.POWERUP_PRICES[item];
+
+            if (gameState.coins >= price && !gameState.upgrades[item]) {
+                gameState.coins -= price;
+                gameState.upgrades[item] = true;
+                elements.coinDisplay.textContent = `💰 ${gameState.coins}`;
+                button.disabled = true;
+                button.textContent = 'Purchased';
+
+                if (item === 'shield') {
+                    bird.hasShield = true;
+                }
+                updatePowerUpIndicators();
+            }
+        }
+
+        // Audio setup
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('music-toggle');
+
+        // Debug logging for audio
+        bgMusic.addEventListener('canplay', () => console.log('Audio can play'));
+        bgMusic.addEventListener('playing', () => console.log('Audio is playing'));
+        bgMusic.addEventListener('error', (e) => console.error('Audio error:', e));
+        
+        // Initialize audio
+        async function initAudio() {
+            try {
+                await bgMusic.load();
+                console.log('Audio loaded');
+                await bgMusic.play();
+                console.log('Audio started playing');
+            } catch (e) {
+                console.error('Audio init failed:', e);
+            }
+        }
+
+        // Initialize audio once on first interaction
+        let audioInitialized = false;
+        function initAudioOnce() {
+            if (!audioInitialized) {
+                audioInitialized = true;
+                initAudio();
+                // Remove all init listeners once audio starts
+                document.removeEventListener('click', initAudioOnce);
+                document.removeEventListener('touchstart', initAudioOnce);
+                document.removeEventListener('keydown', initAudioOnce);
+            }
+        }
+
+        // Try to start audio on first interaction only
+        document.addEventListener('click', initAudioOnce);
+        document.addEventListener('touchstart', initAudioOnce);
+        document.addEventListener('keydown', initAudioOnce);
+
+        function toggleMusic() {
+            gameState.musicOn = !gameState.musicOn;
+            if (gameState.musicOn) {
+                bgMusic.play().then(() => console.log('Music resumed')).catch(e => console.error('Toggle play failed:', e));
+                musicToggle.textContent = '🔊';
+            } else {
+                bgMusic.pause();
+                console.log('Music paused');
+                musicToggle.textContent = '🔈';
+            }
+        }
+
+        musicToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMusic();
+        });
+
+        // Event Listeners
+        container.addEventListener('mousedown', handleInteraction);
+        container.addEventListener('touchstart', handleInteraction, { passive: false });
+        container.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        container.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+
+        // Double tap detection for mobile
+        let lastTap = 0;
+        container.addEventListener('touchstart', e => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0 && gameState.started && !gameState.over) {
+                shoot();
+                e.preventDefault(); // Prevent additional actions
+            }
+            lastTap = currentTime;
+        });
+
+        elements.storeButton.addEventListener('click', e => {
+            e.stopPropagation();
+            elements.storeMenu.style.display = 'block';
+            gameState.started = false;
+        });
+
+        elements.closeStore.addEventListener('click', e => {
+            e.stopPropagation();
+            elements.storeMenu.style.display = 'none';
+        });
+
+        elements.storeMenu.addEventListener('click', handleStorePurchase);
+
+        // Function to update score display style based on difficulty
+        function updateScoreDisplayStyle() {
+            // Find current difficulty level
+            let currentDifficulty = CONFIG.DIFFICULTY_LEVELS[0];
+            for (let i = 0; i < CONFIG.DIFFICULTY_LEVELS.length; i++) {
+                if (gameState.score >= CONFIG.DIFFICULTY_LEVELS[i].score) {
+                    currentDifficulty = CONFIG.DIFFICULTY_LEVELS[i];
+                }
+            }
+            
+            // Update score display style based on difficulty
+            switch(currentDifficulty.name) {
+                case 'Normal':
+                    elements.scoreDisplay.style.color = '#ffffff';
+                    elements.scoreDisplay.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+                    break;
+                case 'Fast':
+                    elements.scoreDisplay.style.color = '#ffff00';
+                    elements.scoreDisplay.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+                    break;
+                case 'Faster':
+                    elements.scoreDisplay.style.color = '#ffa500';
+                    elements.scoreDisplay.style.textShadow = '2px 2px 6px rgba(255,165,0,0.7)';
+                    break;
+                case 'Hard':
+                    elements.scoreDisplay.style.color = '#ff4500';
+                    elements.scoreDisplay.style.textShadow = '2px 2px 8px rgba(255,69,0,0.8)';
+                    break;
+                case 'GOD MODE':
+                    elements.scoreDisplay.style.color = '#ff0000';
+                    elements.scoreDisplay.style.textShadow = '0 0 10px #ff0000, 0 0 20px #ff0000';
+                    break;
+            }
+        }
+        
+        // Start screen functionality
+        elements.playButton.addEventListener('click', () => {
+            // Hide start screen
+            elements.startScreen.style.display = 'none';
+            // Set game as active
+            gameState.active = true;
+            // Show start message
+            elements.startMessage.style.display = 'block';
+            // Initialize audio
+            initAudioOnce();
+        });
+        
+        // Hide game elements initially
+        elements.scoreDisplay.style.display = 'none';
+        elements.coinDisplay.style.display = 'none';
+        elements.storeButton.style.display = 'none';
+        elements.pauseMenu.style.display = 'none';
+        document.querySelector('.power-up-indicator').style.display = 'none';
+        // Make pause button always visible
+        elements.pauseButton.style.display = 'flex';
+        
+        // Smoke effect function with screen shake and red tint
+        function triggerSmokeEffect() {
+            // Show red overlay
+            elements.smokeOverlay.style.opacity = '1';
+            
+            // Create smoke particles for added effect
+            createSmokeParticles();
+            
+            // Add screen shake effect
+            startScreenShake();
+            
+            // Hide smoke overlay after 2 seconds
+            setTimeout(() => {
+                elements.smokeOverlay.style.opacity = '0';
+            }, 2000);
+        }
+        
+        // Screen shake effect
+        function startScreenShake() {
+            const container = document.getElementById('game-container');
+            let shakeCount = 0;
+            const maxShakes = 10;
+            const shakeIntensity = 5; // pixels
+            
+            // Save original position
+            const originalPosition = {
+                x: 0,
+                y: 0
+            };
+            
+            // Set initial position if not already set
+            if (!container.style.position || container.style.position === 'static') {
+                container.style.position = 'relative';
+            }
+            
+            // Apply shake effect
+            const shakeInterval = setInterval(() => {
+                if (shakeCount >= maxShakes) {
+                    clearInterval(shakeInterval);
+                    container.style.transform = `translate(${originalPosition.x}px, ${originalPosition.y}px)`;
+                    return;
+                }
+                
+                // Random offset for shake effect
+                const offsetX = Math.random() * shakeIntensity * 2 - shakeIntensity;
+                const offsetY = Math.random() * shakeIntensity * 2 - shakeIntensity;
+                
+                // Apply transform
+                container.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                
+                shakeCount++;
+            }, 50); // Shake every 50ms
+            
+            // Ensure we stop shaking after the effect duration
+            setTimeout(() => {
+                clearInterval(shakeInterval);
+                container.style.transform = `translate(${originalPosition.x}px, ${originalPosition.y}px)`;
+            }, 2000);
+        }
+        
+        // Create animated smoke particles
+        function createSmokeParticles() {
+            const particleCount = 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'smoke-particle';
+                
+                // Random position
+                const posX = Math.random() * canvas.width;
+                const posY = Math.random() * canvas.height;
+                
+                // Style the particle
+                particle.style.position = 'absolute';
+                particle.style.left = posX + 'px';
+                particle.style.top = posY + 'px';
+                particle.style.width = (30 + Math.random() * 40) + 'px';
+                particle.style.height = (30 + Math.random() * 40) + 'px';
+                particle.style.borderRadius = '50%';
+                particle.style.background = 'radial-gradient(circle, rgba(255,200,200,0.4) 0%, rgba(255,0,0,0.2) 70%)'; // Reddish particles
+                particle.style.opacity = '0.7';
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '6';
+                particle.style.animation = `float ${2 + Math.random() * 2}s ease-out`;
+                
+                // Add to container
+                container.appendChild(particle);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    particle.remove();
+                }, 2000);
+            }
+        }
+        
+        // Add smoke particle animation
+        const smokeStyle = document.createElement('style');
+        smokeStyle.textContent = `
+            @keyframes float {
+                0% { transform: translate(0, 0) scale(0.3); opacity: 0.7; }
+                100% { transform: translate(${Math.random() > 0.5 ? '-' : ''}${20 + Math.random() * 30}px, -${50 + Math.random() * 50}px) scale(1.5); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(smokeStyle);
+        
+        // Toggle pause state function
+        function togglePause() {
+            if (!gameState.started || gameState.over) return;
+            
+            gameState.paused = !gameState.paused;
+            
+            if (gameState.paused) {
+                // Show pause menu and change button appearance
+                elements.pauseButton.classList.add('paused');
+                elements.pauseMenu.style.display = 'block';
+            } else {
+                // Hide pause menu and restore button appearance
+                elements.pauseButton.classList.remove('paused');
+                elements.pauseMenu.style.display = 'none';
+                
+                // Start countdown before resuming
+                startCountdown();
+            }
+        }
+        
+        // Countdown function
+        function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            let count = 5;
+            
+            // Keep game paused during countdown
+            gameState.paused = true;
+            
+            // Show countdown
+            countdownElement.style.display = 'block';
+            countdownElement.textContent = count;
+            
+            // Update countdown every second
+            const countdownInterval = setInterval(() => {
+                count--;
+                
+                if (count <= 0) {
+                    // Resume game
+                    clearInterval(countdownInterval);
+                    countdownElement.style.display = 'none';
+                    gameState.paused = false;
+                } else {
+                    // Update countdown number
+                    countdownElement.textContent = count;
+                }
+            }, 1000);
+        }
+        
+        // Pause button event listeners
+        elements.pauseButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent other click handlers
+            togglePause();
+        });
+        
+        elements.resumeButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent other click handlers
+            togglePause();
+        });
+        
+        elements.restartButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent other click handlers
+            togglePause();
+            resetGame();
+        });
+        
+        // Initialize game
+        updatePowerUpIndicators();
+        drawGame();
+    </script>
+</body>
+</html>
