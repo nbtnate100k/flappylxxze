@@ -1578,7 +1578,11 @@
         }
         
         // Start screen functionality
-        elements.playButton.addEventListener('click', () => {
+        const startGame = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             // Hide start screen
             elements.startScreen.style.display = 'none';
             // Set game as active
@@ -1587,7 +1591,11 @@
             elements.startMessage.style.display = 'block';
             // Initialize audio
             initAudioOnce();
-        });
+        };
+        
+        // Add both click and touch events for better mobile support
+        elements.playButton.addEventListener('click', startGame);
+        elements.playButton.addEventListener('touchend', startGame);
         
         // Hide game elements initially
         elements.scoreDisplay.style.display = 'none';
